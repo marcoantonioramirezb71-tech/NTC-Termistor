@@ -97,11 +97,11 @@ with c3:
     else:
         limite=65535
 
-    ADC_Dec=st.number_input(
+    ADC_Dec = st.number_input(
         "Valor ADC",
         min_value=0,
         max_value=limite,
-        value=500
+        value=min(500, limite)
     )
 
 st.markdown("<br>",unsafe_allow_html=True)

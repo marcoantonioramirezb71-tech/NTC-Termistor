@@ -1,68 +1,208 @@
 import streamlit as st
 import math
 
+# ---------------------------------------
+# CONFIGURACIÓN VENTANA
+# ---------------------------------------
+
 st.set_page_config(
-    page_title="Calculadora NTC"
+    page_title="Calculadora NTC",
+    layout="centered"
 )
 
-st.title(
-    "Calculadora Termistor NTC"
-)
+# ---------------------------------------
+# CSS ESTILO TIPO APP EJECUTABLE
+# ---------------------------------------
 
-Vin=st.selectbox(
-    "Vin",
-    [3.3,5.0]
-)
+st.markdown("""
+<style>
 
-bits=st.selectbox(
-    "Bits ADC",
-    [8,10,12,16],
-    index=2
-)
+.main{
+    background-color:#e9e9e9;
+}
 
-ADC_Dec=st.number_input(
-    "ADC Decimal",
-    value=2048
-)
+.block-container{
+    padding-top:1rem;
+    max-width:900px;
+}
 
-if st.button(
-    "Calcular"
-):
+h1{
+    text-align:center;
+}
 
-    Ro=10000
+.caja{
+    background:white;
+    padding:20px;
+    border-radius:10px;
+    border:1px solid #bdbdbd;
+}
 
-    A=0.001129148
-    B=0.000234125
-    C=0.000000076741
+.resultado{
+    background:#f7f7f7;
+    padding:15px;
+    border-radius:8px;
+    border:1px solid #d0d0d0;
+    text-align:center;
+}
 
-    Vout=(Vin/(2**bits))*ADC_Dec
+div.stButton > button{
+    width:100%;
+}
 
-    Rt=(Vout*Ro)/(Vin-Vout)
+</style>
+""",unsafe_allow_html=True)
 
-    TempK=1/(A+
-             B*math.log(Rt)+
-             C*(math.log(Rt)**3))
+# ---------------------------------------
+# TÍTULO
+# ---------------------------------------
 
-    TempC=TempK-273.15
+st.title("Calculadora parámetros termistor NTC")
+st.write("Fac. Electrónica - UPAEP")
 
-    c1,c2,c3,c4=st.columns(4)
+st.markdown("<br>",unsafe_allow_html=True)
 
-    c1.metric(
-        "Vout(V)",
-        f"{Vout:.3f}"
+# ---------------------------------------
+# PANEL PRINCIPAL
+# ---------------------------------------
+
+st.markdown('<div class="caja">',unsafe_allow_html=True)
+
+c1,c2,c3=st.columns(3)
+
+with c1:
+
+    Vin=st.selectbox(
+        "Voltaje Vin",
+        [3.3,5.0]
     )
 
-    c2.metric(
-        "Rt(Ω)",
-        f"{Rt:.1f}"
+with c2:
+
+    bits_ADC=st.selectbox(
+        "Bits ADC",
+        [8,10,12,16]
     )
 
-    c3.metric(
-        "TempK",
-        f"{TempK:.2f}"
+with c3:
+
+    if bits_ADC==8:
+        limite=255
+
+    elif bits_ADC==10:
+        limite=1023
+
+    elif bits_ADC==12:
+        limite=4095
+
+    else:
+        limite=65535
+
+    ADC_Dec=st.number_input(
+        "Valor ADC",
+        min_value=0,
+        max_value=limite,
+        value=500
     )
 
-    c4.metric(
-        "TempC",
-        f"{TempC:.2f}"
+st.markdown("<br>",unsafe_allow_html=True)
+
+colA,colB,colC=st.columns([1,1,1])
+
+with colB:
+
+    calcular=st.button(
+        "Calcular"
     )
+
+st.markdown('</div>',unsafe_allow_html=True)
+
+# ---------------------------------------
+# CÁLCULOS
+# ---------------------------------------
+
+if calcular:
+
+    try:
+
+        Ro=10000
+
+        A=0.001129148
+        B=0.000234125
+        C=0.000000076741
+
+        Vout=(Vin/(2**bits_ADC))*ADC_Dec
+
+        Rt=(Vout*Ro)/(Vin-Vout)
+
+        TempK=1/(A+
+                 B*math.log(Rt)+
+                 C*(math.log(Rt)**3))
+
+        TempC=TempK-273.15
+
+        st.markdown("<br>",unsafe_allow_html=True)
+
+        st.subheader("Resultados")
+
+        a,b,c,d,e=st.columns(5)
+
+        with a:
+            st.markdown(
+            """
+            <div class='resultado'>
+            <b>ADC</b><br><br>
+            {:.0f}
+            </div>
+            """.format(ADC_Dec),
+            unsafe_allow_html=True
+            )
+
+        with b:
+            st.markdown(
+            """
+            <div class='resultado'>
+            <b>Vout</b><br><br>
+            {:.3f}V
+            </div>
+            """.format(Vout),
+            unsafe_allow_html=True
+            )
+
+        with c:
+            st.markdown(
+            """
+            <div class='resultado'>
+            <b>Rt</b><br><br>
+            {:.2f}Ω
+            </div>
+            """.format(Rt),
+            unsafe_allow_html=True
+            )
+
+        with d:
+            st.markdown(
+            """
+            <div class='resultado'>
+            <b>Temp K</b><br><br>
+            {:.2f}
+            </div>
+            """.format(TempK),
+            unsafe_allow_html=True
+            )
+
+        with e:
+            st.markdown(
+            """
+            <div class='resultado'>
+            <b>Temp °C</b><br><br>
+            {:.2f}
+            </div>
+            """.format(TempC),
+            unsafe_allow_html=True
+            )
+
+    except:
+
+        st.error(
+            "Valores inválidos"
+        )

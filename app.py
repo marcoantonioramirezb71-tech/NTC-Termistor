@@ -1,71 +1,88 @@
 import streamlit as st
 import math
 
-# ---------------------------------------
-# CONFIGURACIÓN VENTANA
-# ---------------------------------------
+# ========================================
+# CONFIGURACIÓN
+# ========================================
 
 st.set_page_config(
-    page_title="Calculadora NTC",
+    page_title="Calculadora parámetros termistor NTC",
     layout="centered"
 )
 
-# ---------------------------------------
-# CSS ESTILO TIPO APP EJECUTABLE
-# ---------------------------------------
+# ========================================
+# ESTILO
+# ========================================
 
 st.markdown("""
 <style>
 
 .main{
-    background-color:#e9e9e9;
+    background-color:#e6e6e6;
 }
 
 .block-container{
+    max-width:950px;
     padding-top:1rem;
-    max-width:900px;
 }
 
 h1{
     text-align:center;
 }
 
-.caja{
+.panel{
     background:white;
     padding:20px;
-    border-radius:10px;
-    border:1px solid #bdbdbd;
+    border-radius:12px;
+    border:1px solid #bbbbbb;
 }
 
 .resultado{
-    background:#f7f7f7;
+    background:white;
     padding:15px;
     border-radius:8px;
-    border:1px solid #d0d0d0;
+    border:1px solid #cccccc;
+    color:black;
     text-align:center;
+    min-height:120px;
 }
 
-div.stButton > button{
+.valor{
+    font-size:28px;
+    font-weight:bold;
+}
+
+.titulo{
+    font-size:16px;
+}
+
+div.stButton>button{
     width:100%;
 }
 
 </style>
 """,unsafe_allow_html=True)
 
-# ---------------------------------------
-# TÍTULO
-# ---------------------------------------
+# ========================================
+# TITULO
+# ========================================
 
 st.title("Calculadora parámetros termistor NTC")
-st.write("Fac. Electrónica - UPAEP")
+
+st.write(
+    "Fac. Electrónica - UPAEP"
+)
 
 st.markdown("<br>",unsafe_allow_html=True)
 
-# ---------------------------------------
-# PANEL PRINCIPAL
-# ---------------------------------------
+# ========================================
+# PANEL
+# ========================================
 
-st.markdown('<div class="caja">',unsafe_allow_html=True)
+st.markdown(
+    '<div class="panel">',
+    unsafe_allow_html=True
+)
 
 c1,c2,c3=st.columns(3)
 
@@ -83,42 +100,53 @@ with c2:
         [8,10,12,16]
     )
 
+# valores medios automáticos
+
+medio={
+
+    8:128,
+    10:512,
+    12:2048,
+    16:32768
+
+}
+
+limites={
+
+    8:255,
+    10:1023,
+    12:4095,
+    16:65535
+
+}
+
 with c3:
 
-    if bits_ADC==8:
-        limite=255
-
-    elif bits_ADC==10:
-        limite=1023
-
-    elif bits_ADC==12:
-        limite=4095
-
-    else:
-        limite=65535
-
-    ADC_Dec = st.number_input(
+    ADC_Dec=st.number_input(
         "Valor ADC",
         min_value=0,
-        max_value=limite,
-        value=min(500, limite)
+        max_value=limites[bits_ADC],
+        value=medio[bits_ADC]
     )
 
 st.markdown("<br>",unsafe_allow_html=True)
 
-colA,colB,colC=st.columns([1,1,1])
+b1,b2,b3=st.columns([1,1,1])
 
-with colB:
+with b2:
 
     calcular=st.button(
         "Calcular"
     )
 
-st.markdown('</div>',unsafe_allow_html=True)
+st.markdown(
+    "</div>",
+    unsafe_allow_html=True
+)
 
-# ---------------------------------------
-# CÁLCULOS
-# ---------------------------------------
+# ========================================
+# CALCULO
+# ========================================
 
 if calcular:
 
@@ -132,77 +160,136 @@ if calcular:
 
         Vout=(Vin/(2**bits_ADC))*ADC_Dec
 
+        if Vin-Vout==0:
+
+            st.error(
+                "División entre cero"
+            )
+
+            st.stop()
+
         Rt=(Vout*Ro)/(Vin-Vout)
 
-        TempK=1/(A+
-                 B*math.log(Rt)+
-                 C*(math.log(Rt)**3))
+        TempK=1/(
+
+            A+
+            B*math.log(Rt)+
+            C*(math.log(Rt)**3)
+
+        )
 
         TempC=TempK-273.15
 
         st.markdown("<br>",unsafe_allow_html=True)
 
-        st.subheader("Resultados")
+        st.subheader(
+            "Resultados"
+        )
 
         a,b,c,d,e=st.columns(5)
 
         with a:
+
             st.markdown(
-            """
+            f"""
             <div class='resultado'>
-            <b>ADC</b><br><br>
-            {:.0f}
+            <div class='titulo'>
+            ADC
             </div>
-            """.format(ADC_Dec),
+
+            <hr>
+
+            <div class='valor'>
+            {ADC_Dec}
+            </div>
+
+            </div>
+            """,
             unsafe_allow_html=True
             )
 
         with b:
+
             st.markdown(
-            """
+            f"""
             <div class='resultado'>
-            <b>Vout</b><br><br>
-            {:.3f}V
+            <div class='titulo'>
+            Vout
             </div>
-            """.format(Vout),
+
+            <hr>
+
+            <div class='valor'>
+            {Vout:.3f}V
+            </div>
+
+            </div>
+            """,
             unsafe_allow_html=True
             )
 
         with c:
+
             st.markdown(
-            """
+            f"""
             <div class='resultado'>
-            <b>Rt</b><br><br>
-            {:.2f}Ω
+            <div class='titulo'>
+            Rt
             </div>
-            """.format(Rt),
+
+            <hr>
+
+            <div class='valor'>
+            {Rt:.1f}
+            </div>
+
+            </div>
+            """,
             unsafe_allow_html=True
             )
 
         with d:
+
             st.markdown(
-            """
+            f"""
             <div class='resultado'>
-            <b>Temp K</b><br><br>
-            {:.2f}
+            <div class='titulo'>
+            Temp K
             </div>
-            """.format(TempK),
+
+            <hr>
+
+            <div class='valor'>
+            {TempK:.2f}
+            </div>
+
+            </div>
+            """,
             unsafe_allow_html=True
             )
 
         with e:
+
             st.markdown(
-            """
+            f"""
             <div class='resultado'>
-            <b>Temp °C</b><br><br>
-            {:.2f}
+            <div class='titulo'>
+            Temp °C
             </div>
-            """.format(TempC),
+
+            <hr>
+
+            <div class='valor'>
+            {TempC:.2f}
+            </div>
+
+            </div>
+            """,
             unsafe_allow_html=True
             )
 
     except:
 
         st.error(
-            "Valores inválidos"
+            "Error en los cálculos"
         )
